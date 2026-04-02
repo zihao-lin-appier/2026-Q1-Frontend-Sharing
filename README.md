@@ -72,6 +72,8 @@ node topic1-6.js
 - **Any mutation triggers re-serialization** — `searchParams.set()`, `.append()`, `.delete()`, and `.sort()` all cause the entire query string to be re-encoded, turning `${macro}` into `%24%7Bmacro%7D`.
 - **`searchParams.get()` is deceptive** — it always returns a percent-decoded value, so `${macro}` appears intact even after the URL has been corrupted. Always verify with `.toString()` or `.search` to see what actually gets sent.
 
+---
+
 ### Why does this happen?
 
 Problem without encoding:
@@ -105,4 +107,27 @@ which should be encoded as:
 https://example.com?a=hello%26world
 ```
 
-This is the same reason why `new URL()` does not encode the input string.
+---
+
+### Similar APIs
+
+| API                  | Direction | Assumes input is |
+| -------------------- | --------- | ---------------- |
+| `encodeURI`          | Encode    | Full URL         |
+| `encodeURIComponent` | Encode    | Single component |
+| `decodeURI`          | Decode    | Full URL         |
+| `decodeURIComponent` | Decode    | Single component |
+
+**Try it:**
+
+7. `encodeURI` vs `encodeURIComponent`
+
+```bash
+node topic1-7.js
+```
+
+8. use `decodeURI` to recover the URL
+
+```bash
+node topic1-8.js
+```
