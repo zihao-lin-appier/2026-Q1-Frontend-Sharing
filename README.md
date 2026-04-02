@@ -131,3 +131,41 @@ node topic1-7.js
 ```bash
 node topic1-8.js
 ```
+
+---
+
+### How to preserve macros?
+
+#### Approach 1: String concatenation
+
+#### Approach 2: Placeholder swap
+
+Replace macros with safe placeholders before mutation, then restore them after.
+
+```js
+const raw = "https://example.com/id436?a=${partner_ul}&b=${campaign_name}";
+
+// Step 1: Replace macros with placeholders
+const macros = {};
+let i = 0;
+const safe = raw.replace(/\$\{[^}]+\}/g, (match) => {
+  const key = `__MACRO_${i++}__`;
+  macros[key] = match;
+  return key;
+});
+
+// Step 2: Mutate freely
+const url = new URL(safe);
+// "https://example.com/id436?a=__MACRO_0__&b=__MACRO_1__"
+
+url.searchParams.set("c", "extra_param");
+url.searchParams.delete("b");
+
+// Step 3: Restore macros
+let final = url.toString();
+for (const [key, value] of Object.entries(macros)) {
+  final = final.replace(key, value);
+}
+
+// "https://example.com/id436?a=${partner_ul}&c=extra_param"
+```
