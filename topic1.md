@@ -1,4 +1,4 @@
-# Topic 1 - URL search params
+# URL Encoding Magic
 
 Take a look at:
 
@@ -8,13 +8,27 @@ ${}
 
 What does this make you think of?
 
+<br />
+
 **Macro !**
+
+<br />
 
 Macros are sometimes placed in the URL's search params:
 
 ```
 https://example.com/id436?a=${partner_ul}&b=${campaign_name}
 ```
+
+<br />
+
+One day, someone noticed that the URL had become like this:
+
+```
+https://example.com/id436?a=%24%7Bpartner_ul%7D&b=%24%7Bcampaign_name%7D
+```
+
+<br />
 
 What happens when you try to access the URL using the URL object?
 
@@ -106,28 +120,23 @@ https://example.com?a=hello%26world
 
 ---
 
-### Similar APIs
+### Related APIs
 
-The difference between these four APIs comes down to one question: are you encoding/decoding a **full URL**, or just a **part of it**?
+- `encodeURI`
+- `encodeURIComponent`
+- `decodeURI`
+- `decodeURIComponent`
 
-| API                  | Direction | Assumes input is        |
-| -------------------- | --------- | ----------------------- |
-| `encodeURI`          | Encode    | Full URL                |
-| `encodeURIComponent` | Encode    | Single component        |
-| `decodeURI`          | Decode    | Full URL                |
-| `decodeURIComponent` | Decode    | Single component        |
+<br />
 
-**Encoding**
+| API                  | Direction | Assumes input is |
+| -------------------- | --------- | ---------------- |
+| `encodeURI`          | Encode    | Full URL         |
+| `encodeURIComponent` | Encode    | Single component |
+| `decodeURI`          | Decode    | Full URL         |
+| `decodeURIComponent` | Decode    | Single component |
 
-- `encodeURI` does **not** encode URL-structural characters (`: / ? & = #`). It keeps the URL navigable but encodes `{ }` — partially breaking macros.
-- `encodeURIComponent` encodes **almost everything**, including `& = ? /`. Safe for query values, but destroys a full URL if misused.
-
-**Decoding**
-
-- `decodeURI` does **not** decode characters that would break URL structure (`%26` stays `%26`). Note: `$` (`%24`) is a URI reserved character, so `decodeURI` won't decode it either — meaning it cannot fully restore a broken macro URL.
-- `decodeURIComponent` decodes **everything** — use it only on individual values, not full URLs.
-
-**Quick rule:** full URL → `encodeURI` / `decodeURI`. Component (query value, path segment) → `encodeURIComponent` / `decodeURIComponent`.
+<br />
 
 **Try it:**
 
@@ -137,31 +146,136 @@ The difference between these four APIs comes down to one question: are you encod
 node topic1-7.js
 ```
 
-8. use `decodeURI` to recover the URL
+8. `decodeURI` vs `decodeURIComponent`
 
 ```bash
 node topic1-8.js
 ```
 
+<br />
+
+The `URI` pair (`encodeURI` / `decodeURI`) **skips** URI reserved characters. This preserves URL structure.
+
+The `URIComponent` pair treats **everything** as data — all special characters are encoded/decoded.
+
+| Char | Reserved? | `URI` pair      | `URIComponent` pair |
+| ---- | --------- | --------------- | ------------------- |
+| `$`  | Yes       | skipped         | encoded/decoded     |
+| `&`  | Yes       | skipped         | encoded/decoded     |
+| `=`  | Yes       | skipped         | encoded/decoded     |
+| `{`  | No        | encoded/decoded | encoded/decoded     |
+| `}`  | No        | encoded/decoded | encoded/decoded     |
+
+<br />
+
+9. use `decodeURI` to recover the URL
+
+```bash
+node topic1-9.js
+```
+
 ---
 
-### How to preserve macros?
+### Why does `URLSearchParams` encode `$` but `encodeURI` does not?
+
+<br />
+
+**Try it:**
+
+10. `encodeURI` vs `URLSearchParams` on `$`
+
+```bash
+node topic1-10.js
+```
+
+<br />
+
+| Mechanism         | Spec                                | `$` encoded? |
+| ----------------- | ----------------------------------- | ------------ |
+| `encodeURI`       | RFC 3986 (URI)                      | No           |
+| `URLSearchParams` | `application/x-www-form-urlencoded` | Yes          |
+
+- `encodeURI` treats `$` as a **legal URI character** (`;/?:@&=+$,#`), so it leaves it alone.
+- `URLSearchParams` uses **form encoding**, which only allows `A-Z a-z 0-9 - _ . *` unencoded. Everything else — including `$` — is percent-encoded.
+
+---
+
+### When to use which?
+
+These APIs fall into two categories:
+
+**String-level** — `encodeURI`, `decodeURI`, `encodeURIComponent`, `decodeURIComponent`
+
+**Structured-level** — `URL` / `URLSearchParams`
+
+| API                  | Mindset         | Use for           |
+| -------------------- | --------------- | ----------------- |
+| `encodeURI`          | URL syntax      | Encode a full URL |
+| `decodeURI`          | URL syntax      | Decode a full URL |
+| `encodeURIComponent` | Data            | Encode a value    |
+| `decodeURIComponent` | Data            | Decode a value    |
+| `URLSearchParams`    | Structured data | Manipulate params |
+
+<br />
+
+**`encodeURI`** — "I have a full URL, just encode the illegal characters"
+
+```js
+encodeURI("https://example.com?q=hello world&lang=en");
+// "https://example.com?q=hello%20world&lang=en"
+```
+
+**`encodeURIComponent`** — "This is data, make it safe to put inside a URL"
+
+```js
+const keyword = "hello&world";
+const url = `https://example.com?q=${encodeURIComponent(keyword)}`;
+// "https://example.com?q=hello%26world"
+```
+
+**`decodeURI`** — "Decode this URL, but don't break its structure"
+
+```js
+decodeURI("https://example.com?q=hello%20world&lang=en");
+// "https://example.com?q=hello world&lang=en"
+```
+
+**`decodeURIComponent`** — "This is encoded data, fully restore it"
+
+```js
+decodeURIComponent("hello%26world");
+// "hello&world"
+```
+
+**`URL` / `URLSearchParams`** — "I'm manipulating URL structure, not strings"
+
+```js
+const url = new URL("https://example.com");
+url.searchParams.set("q", "hello&world");
+url.toString();
+// "https://example.com/?q=hello%26world"
+```
+
+---
+
+### How to preserve macros when updating the search params?
 
 #### Approach 1: String concatenation
 
-Perform all `searchParams` mutations on a separate instance, then concatenate the result onto the original URL string. The original macros are never parsed or re-serialized.
-
 ```js
-const base = 'https://example.com/id436?a=${partner_ul}&b=${campaign_name}';
-
-const extra = new URLSearchParams({ c: 'extra_param', d: 'another' });
-const result = `${base}&${extra.toString()}`;
-
-// "https://example.com/id436?a=${partner_ul}&b=${campaign_name}&c=extra_param&d=another"
-// ✅ Original macros intact, new params safely encoded
+const result = `${url}&${extraParam}`;
 ```
 
-Limitation: you can only **append** new params. You cannot modify or delete existing ones without risking the macros.
+**Pros**
+
+- No encoding issues — macros are never parsed
+- Simple, no regex or placeholder logic
+
+**Cons**
+
+- Easy to misuse — e.g. forgetting `&`, double `?`, or appending to a URL without existing params
+- Can only **append**
+- No validation
 
 ---
 
@@ -170,33 +284,43 @@ Limitation: you can only **append** new params. You cannot modify or delete exis
 Replace macros with safe placeholders before mutation, then restore them after.
 
 ```js
-const raw = 'https://example.com/id436?a=${partner_ul}&b=${campaign_name}';
+const raw = "https://example.com/id436?a=${partner_ul}&b=${campaign_name}";
 
 // Step 1: Replace macros with placeholders
-const macros = {};
-let i = 0;
-const safe = raw.replace(/\$\{[^}]+\}/g, (match) => {
-  const key = `__MACRO_${i++}__`;
-  macros[key] = match;
+const placeholders = new Map();
+let counter = 0;
+const uniqueId = Math.random().toString(36).slice(2);
+const toPlaceholder = (macro) => {
+  const key = `__MACRO_${uniqueId}_${counter++}__`;
+  placeholders.set(key, macro);
   return key;
-});
+};
+
+const safeUrl = raw.replace(/\$\{[^}]+\}/g, toPlaceholder);
 
 // Step 2: Mutate freely
-const url = new URL(safe);
-console.log(url.toString());
-// "https://example.com/id436?a=__MACRO_0__&b=__MACRO_1__"
+const url = new URL(safeUrl);
+// "https://example.com/id436?a=__MACRO_abc123_0__&b=__MACRO_abc123_1__"
 
-url.searchParams.set('c', 'extra_param');
-url.searchParams.delete('b');
+url.searchParams.set("c", "extra_param");
+url.searchParams.delete("b");
 
 // Step 3: Restore macros
 let final = url.toString();
-for (const [key, value] of Object.entries(macros)) {
+for (const [key, value] of placeholders) {
   final = final.replace(key, value);
 }
 
 // "https://example.com/id436?a=${partner_ul}&c=extra_param"
-// ✅ Macros preserved, and we were able to set/delete params
 ```
 
-This approach supports **all** `searchParams` operations (set, append, delete, sort) while keeping macros safe.
+---
+
+### References
+
+- [WHATWG URL Standard](https://url.spec.whatwg.org/)
+- [RFC 3986 — Uniform Resource Identifier (URI): Generic Syntax](https://datatracker.ietf.org/doc/html/rfc3986)
+- [ECMAScript spec — `encodeURI`](https://tc39.es/ecma262/#sec-encodeuri-uri)
+- [ECMAScript spec — `encodeURIComponent`](https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent)
+- [MDN — Percent-encoding](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding)
+- [MDN — URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
