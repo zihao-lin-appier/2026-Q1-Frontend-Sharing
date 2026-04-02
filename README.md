@@ -32,7 +32,7 @@ https://example.com/id436?a=%24%7Bpartner_ul%7D&b=%24%7Bcampaign_name%7D
 
 <br />
 
-What happens when you try to access the URL using the URL object?
+What happens when you try to access the URL using `new URL()`?
 
 **Try it:**
 
@@ -82,14 +82,7 @@ node 6.js
 
 ### Why does this happen?
 
-The `URL` object internally maintains two separate representations:
-
-1. **The raw href string** — what you originally passed in. When you call `new URL(str)` without any further mutation, `toString()` returns this string largely as-is, so `${macro}` is preserved.
-2. **The parsed `searchParams` object** — a live `URLSearchParams` instance that holds each key-value pair in decoded form. The moment you call any mutating method (`.set()`, `.append()`, `.delete()`, `.sort()`), the browser re-serializes **all** params from this internal parsed representation back into the href — and during that process every special character (`$`, `{`, `}`) gets percent-encoded.
-
-`searchParams.get()` reads from the decoded internal representation, so it always returns the human-readable value regardless of what the actual href looks like. This makes it easy to miss the corruption.
-
-Problem without encoding:
+Imagine `set()` did not encode for us:
 
 ```js
 url.searchParams.set("a", "hello&world");
@@ -170,7 +163,7 @@ The `URIComponent` pair treats **everything** as data — all special characters
 
 <br />
 
-9. use `decodeURI` to recover the URL
+9. try to use `decodeURI` to recover the URL
 
 ```bash
 node 9.js
@@ -199,6 +192,34 @@ node 10.js
 
 - `encodeURI` treats `$` as a **legal URI character** (`;/?:@&=+$,#`), so it leaves it alone.
 - `URLSearchParams` uses **form encoding**, which only allows `A-Z a-z 0-9 - _ . *` unencoded. Everything else — including `$` — is percent-encoded.
+
+---
+
+### `URLSearchParams != encodeURIComponent`
+
+<br />
+
+**Try it:**
+
+11. `encodeURIComponent` vs `URLSearchParams` on spaces
+
+```bash
+node 11.js
+```
+
+<br />
+
+Both APIs are encoding data, but they follow different rules:
+
+- `encodeURIComponent("hello world")` becomes `hello%20world`
+- `URLSearchParams` serializes the same value as `hello+world`
+
+This is another effect of `application/x-www-form-urlencoded`:
+
+- spaces become `+`
+- many other special characters become percent-encoded
+
+So `URLSearchParams` is not just "calling `encodeURIComponent` for you" — it follows form-encoding semantics.
 
 ---
 
@@ -258,6 +279,27 @@ url.toString();
 // "https://example.com/?q=hello%26world"
 ```
 
+```mermaid
+flowchart TD
+    A["What are you handling?"] --> B["A full URL"]
+    A --> C["One piece of data inside a URL"]
+
+    B --> D["Need to read or update query params?"]
+    D -->|Yes| E["Use URL / url.searchParams"]
+    D -->|No| F["Just encoding an existing full URL string?"]
+    F -->|Yes| G["Use encodeURI"]
+    F -->|No| H["Need to decode a full URL?"]
+    H -->|Yes| I["Use decodeURI"]
+
+    C --> J["Need to encode it before putting it into a URL?"]
+    J -->|Yes| K["Use encodeURIComponent"]
+    J -->|No| L["Need to decode one encoded value?"]
+    L -->|Yes| M["Use decodeURIComponent"]
+
+    E --> N["If the query contains raw macros like ${...}, avoid direct searchParams mutation"]
+
+```
+
 ---
 
 ### How to preserve macros when updating the search params?
@@ -270,7 +312,7 @@ const result = `${url}&${extraParam}`;
 
 **Pros**
 
-- No encoding issues — macros are never parsed
+- Avoid encoding issues — macros are never parsed
 - Simple, no regex or placeholder logic
 
 **Cons**

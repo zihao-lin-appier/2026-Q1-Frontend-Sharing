@@ -14,5 +14,10 @@ console.log(url.searchParams.get("a"));
 
 console.log();
 
+console.log("search after set:");
+console.log(url.search);
+
+console.log();
+
 console.log("After set:");
 console.log(url.toString());
