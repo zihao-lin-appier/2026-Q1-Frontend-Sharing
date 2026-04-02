@@ -1,5 +1,5 @@
 const encodedUrl =
-  "https://example.com/id436?a=%24%7Bpartner_ul%7D%26b%3D%24%7Bcampaign_name%7D";
+  "https://example.com/id436?a=%24%7Bpartner_ul%7D&b=%24%7Bcampaign_name%7D&c=hello%26world";
 
 console.log("original:");
 console.log(encodedUrl);
