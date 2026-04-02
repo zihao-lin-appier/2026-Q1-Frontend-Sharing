@@ -36,37 +36,37 @@ What happens when you try to access the URL using `new URL()`?
 
 **Try it:**
 
-1. `new URL()`
+1. [`1.js`](./1.js) - `new URL()`
 
 ```bash
 node 1.js
 ```
 
-2. `searchParams.set()`
+2. [`2.js`](./2.js) - `searchParams.set()`
 
 ```bash
 node 2.js
 ```
 
-3. `searchParams.append()`
+3. [`3.js`](./3.js) - `searchParams.append()`
 
 ```bash
 node 3.js
 ```
 
-4. `searchParams.delete()`
+4. [`4.js`](./4.js) - `searchParams.delete()`
 
 ```bash
 node 4.js
 ```
 
-5. `searchParams.sort()`
+5. [`5.js`](./5.js) - `searchParams.sort()`
 
 ```bash
 node 5.js
 ```
 
-6. `searchParams.get()`
+6. [`6.js`](./6.js) - `searchParams.get()`
 
 ```bash
 node 6.js
@@ -135,13 +135,13 @@ https://example.com?a=hello%26world
 
 **Try it:**
 
-7. `encodeURI` vs `encodeURIComponent`
+7. [`7.js`](./7.js) - `encodeURI` vs `encodeURIComponent`
 
 ```bash
 node 7.js
 ```
 
-8. `decodeURI` vs `decodeURIComponent`
+8. [`8.js`](./8.js) - `decodeURI` vs `decodeURIComponent`
 
 ```bash
 node 8.js
@@ -163,7 +163,7 @@ The `URIComponent` pair treats **everything** as data — all special characters
 
 <br />
 
-9. try to use `decodeURI` to recover the URL
+9. [`9.js`](./9.js) - try to use `decodeURI` to recover the URL
 
 ```bash
 node 9.js
@@ -177,7 +177,7 @@ node 9.js
 
 **Try it:**
 
-10. `encodeURI` vs `URLSearchParams` on `$`
+10. [`10.js`](./10.js) - `encodeURI` vs `URLSearchParams` on `$`
 
 ```bash
 node 10.js
@@ -201,7 +201,7 @@ node 10.js
 
 **Try it:**
 
-11. `encodeURIComponent` vs `URLSearchParams` on spaces
+11. [`11.js`](./11.js) - `encodeURIComponent` vs `URLSearchParams` on spaces
 
 ```bash
 node 11.js
