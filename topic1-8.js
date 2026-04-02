@@ -1,10 +1,27 @@
-const url = new URL(
-  "https://example.com/id436?a=${partner_ul}&b=${campaign_name}",
-);
-url.searchParams.set("b", "new_campaign");
+const encodedUrl =
+  "https://example.com/id436?a=%24%7Bpartner_ul%7D%26b%3D%24%7Bcampaign_name%7D";
 
-console.log("After set:", url.toString());
+console.log("original:");
+console.log(encodedUrl);
 
-console.log("decodeURI:", decodeURI(url.toString()));
-// ❌ %24{partner_ul} — $ (%24) is a URI reserved character, so decodeURI won't decode it.
-//    Only { } are decoded because they are NOT reserved. The macro is still broken.
+console.log();
+
+console.log("decodeURI:");
+console.log(decodeURI(encodedUrl));
+
+console.log();
+
+console.log("decodeURIComponent:");
+console.log(decodeURIComponent(encodedUrl));
+
+console.log();
+
+const withEncodedAmp = "hello%26world";
+
+console.log('decodeURI("hello%26world"):');
+console.log(decodeURI(withEncodedAmp));
+
+console.log();
+
+console.log('decodeURIComponent("hello%26world"):');
+console.log(decodeURIComponent(withEncodedAmp));
